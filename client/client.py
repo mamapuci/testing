@@ -6,26 +6,51 @@ import threading
 import requests
 import sys
 import traceback
+import socket
+
+
 
 # =========================
 # AUTO DISCOVER SERVER
 # =========================
 
+
 def find_server():
-    base_ip = "192.168.1."
+
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+    s.connect(("8.8.8.8", 80))
+
+    local_ip = s.getsockname()[0]
+
+    s.close()
+
+    print("LOCAL IP:", local_ip)
+
+    parts = local_ip.split(".")
+
+    base_ip = f"{parts[0]}.{parts[1]}.{parts[2]}."
+
+    print("SCANNING:", base_ip)
 
     for i in range(1, 255):
+
         ip = base_ip + str(i)
+
         url = f"http://{ip}:5000/discover"
 
         try:
-            r = requests.get(url, timeout=0.3)
+
+            r = requests.get(url, timeout=0.03)
 
             if r.status_code == 200:
+
                 data = r.json()
 
                 if data.get("name") == "study-guard":
+
                     print("SERVER FOUND:", ip)
+
                     return ip
 
         except:
